@@ -24,3 +24,4 @@ jobs:
         ip r
         echo "#####################"
         cat /etc/os-release
+        sleep 10m
