@@ -1,0 +1,45 @@
+# This workflow is a smoke test for the GitHub Actions runners on s390x.
+name: smoke-test
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-24.04-s390x
+    timeout-minutes: 10
+
+    steps:      
+    - name: Basic smoke test
+      run: |
+        set -e
+
+        echo "### SYSTEM ###"
+        whoami
+        id
+        uname -a
+        cat /etc/os-release
+        lscpu
+        echo
+
+        echo "### SECURITY ###"
+        apparmor_status || true
+        echo
+
+        echo "### DISK ###"
+        df -h
+        echo
+
+        echo "### MEMORY ###"
+        free -h
+        echo
+
+        echo "### NETWORK (INTERNAL) ###"
+        ip a
+        ip r
+        echo
+
+        echo "### NETWORK (EXTERNAL) ###"
+        ping -c 3 google.ca
+        curl -I https://api.github.com
