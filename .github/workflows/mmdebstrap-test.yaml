@@ -1,0 +1,19 @@
+# This workflow to test mmdebstrap
+# Issue: https://github.com/IBM/actionspz/issues/43
+name: mmdebstrap-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mmdebstrap-test:
+    runs-on: ubuntu-24.04-s390x
+    timeout-minutes: 10
+
+    steps:
+      - name: Test mmdebstrap
+        run: |
+          docker run --rm --cap-add SYS_ADMIN --cap-add SYS_CHROOT --cap-add MKNOD --security-opt apparmor=unconfined -v /tmp:/tmp ubuntu:noble bash -c '
+            apt-get update && apt-get install -y iproute2 iputils-ping mmdebstrap &&
+            mmdebstrap --mode=root --arch=s390x --variant=required noble /tmp/rootfs \
+              --setup-hook="bash -c \"echo === ip a === >&2; ip a >&2; echo === resolv.conf === >&2; cat /etc/resolv.conf >&2; echo === apt test === >&2; apt-get update >&2\""'
