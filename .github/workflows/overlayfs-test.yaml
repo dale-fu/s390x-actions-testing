@@ -1,0 +1,20 @@
+# This workflow to test whether OverlayFS mount works on a Btrfs filesystem. This issue was fixed
+# in kernel 5.19.0-38 so the GitHub Actions runner require a newer kernel version installed.
+# Issue: https://github.com/IBM/actionspz/issues/7
+name: overlayfs-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  overlayfs-test:
+    runs-on: ubuntu-24.04-s390x
+    timeout-minutes: 10
+
+    steps:
+      - name: Run mkosi sandbox
+        run: |
+          git clone https://github.com/systemd/mkosi
+          cd mkosi
+          mkdir lower upper work
+          python3 mkosi/sandbox.py --bind / / --become-root --overlay-lowerdir lower/ --overlay-workdir work/ --overlay-upperdir upper/ --overlay overlay mount
