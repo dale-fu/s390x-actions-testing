@@ -1,0 +1,18 @@
+# This workflow to test Docker.
+# Issue: https://github.com/IBM/actionspz/issues/43
+name: kata-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kata-test:
+    runs-on: ubuntu-24.04-s390x
+    timeout-minutes: 10
+
+    steps:      
+      - name: Build pause-image
+        run: |
+          sudo git clone https://github.com/kata-containers/kata-containers.git
+          cd kata-containers
+          sudo make pause-image-tarball-build
