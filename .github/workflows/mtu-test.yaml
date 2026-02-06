@@ -17,6 +17,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            -f test-files/Dockerfile \
+            -f test-files/mtu.Dockerfile \
             -t my-image \
             .
