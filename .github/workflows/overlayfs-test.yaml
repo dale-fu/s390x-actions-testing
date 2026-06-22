@@ -9,12 +9,19 @@ on:
 jobs:
   overlayfs-test:
     strategy:
+      fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+        runner:
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
     steps:
+      - name: Disable AppArmor userns restriction (VM only)
+        if: contains(matrix.runner, 'vm')
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
       - name: Run mkosi sandbox
         run: |
           git clone https://github.com/systemd/mkosi

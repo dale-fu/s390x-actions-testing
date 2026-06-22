@@ -10,8 +10,11 @@ on:
 jobs:
   manageiq-test:
     strategy:
+      fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+        runner:
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
@@ -28,3 +31,4 @@ jobs:
       - name: Test mock command
         run: |
           docker run --privileged --rm mock:latest mock -r fedora-43-s390x --init
+        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}

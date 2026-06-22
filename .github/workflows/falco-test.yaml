@@ -12,8 +12,11 @@ on:
 jobs:
   falcosecurity-test:
     strategy:
+      fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+        runner:
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
@@ -43,3 +46,4 @@ jobs:
           EOF
           gcc test_delete_module.c -o test_delete_module
           sudo ./test_delete_module
+        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}

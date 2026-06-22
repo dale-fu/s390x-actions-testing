@@ -1,4 +1,4 @@
-# This workflow is a smoke test for the GitHub Actions runners on s390x.
+# This workflow is a smoke test for the GitHub Actions runners.
 name: smoke-test
 
 on:
@@ -8,7 +8,15 @@ jobs:
   smoke-test:
     strategy:
       matrix:
-        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - ubuntu-22.04-s390x
+          - ubuntu-22.04-s390x-vm
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
+          - ubuntu-24.04-ppc64le
+          - ubuntu-24.04-ppc64le-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 

@@ -1,6 +1,5 @@
 # This workflow to test building Kata Containers pause image.
-# Container runners lack kernel module access and restricted ioctl/networking
-# operations which are needed for the build process.
+# Validates the build works on both container and VM runners.
 # Issue: https://github.com/IBM/actionspz/issues/43
 name: kata-test
 
@@ -10,8 +9,11 @@ on:
 jobs:
   kata-test:
     strategy:
+      fail-fast: false
       matrix:
-        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+        runner:
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
