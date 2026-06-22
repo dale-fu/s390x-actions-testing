@@ -27,6 +27,17 @@ jobs:
 
         echo "### SECURITY ###"
         apparmor_status || true
+        cat /proc/self/status | grep -i seccomp
+        cat /proc/self/status | grep -i cap
+        echo
+
+        echo "### SUDO ###"
+        sudo -n true && echo "Passwordless sudo: OK" || echo "Passwordless sudo: FAILED"
+        cat /etc/sudoers.d/runner 2>/dev/null || echo "No /etc/sudoers.d/runner file"
+        echo
+
+        echo "### KERNEL MODULES ###"
+        ls /lib/modules/ 2>/dev/null || echo "No /lib/modules"
         echo
 
         echo "### DISK ###"
