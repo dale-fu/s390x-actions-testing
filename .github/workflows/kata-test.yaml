@@ -1,4 +1,6 @@
-# This workflow to test Docker.
+# This workflow to test building Kata Containers pause image.
+# Container runners lack kernel module access and restricted ioctl/networking
+# operations which are needed for the build process.
 # Issue: https://github.com/IBM/actionspz/issues/43
 name: kata-test
 
@@ -7,12 +9,15 @@ on:
 
 jobs:
   kata-test:
-    runs-on: ubuntu-24.04-s390x
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
-    steps:      
+    steps:
       - name: Build pause-image
         run: |
-          sudo git clone https://github.com/kata-containers/kata-containers.git
+          git clone https://github.com/kata-containers/kata-containers.git
           cd kata-containers
           sudo make pause-image-tarball-build

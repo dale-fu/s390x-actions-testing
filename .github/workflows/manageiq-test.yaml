@@ -9,7 +9,10 @@ on:
 
 jobs:
   manageiq-test:
-    runs-on: ubuntu-24.04-s390x
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
     steps:

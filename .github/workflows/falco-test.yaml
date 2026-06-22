@@ -11,7 +11,10 @@ on:
 
 jobs:
   falcosecurity-test:
-    runs-on: ubuntu-24.04-s390x
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
     steps:      
@@ -19,9 +22,9 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y --no-install-recommends build-essential
 
-      - name: Create executable
+      - name: Create and run executable
         run: |
-          cat > test_delete_module.c << EOF
+          cat > test_delete_module.c << 'EOF'
           #include <fcntl.h>
           #include <sys/syscall.h>
           #include <unistd.h>
@@ -29,7 +32,7 @@ jobs:
           #include <errno.h>
           #include <string.h>
           #include <assert.h>
-            
+
           int main() {
             long res = syscall(__NR_delete_module, "non_existing_path", O_NONBLOCK);
             printf("res = %ld, errno = %d, strerror = %s\n", res, errno, strerror(errno));

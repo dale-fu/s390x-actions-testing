@@ -1,4 +1,6 @@
-# This workflow to test mmdebstrap
+# This workflow to test mmdebstrap in Docker with SYS_ADMIN capability.
+# When SYS_ADMIN is granted, mmdebstrap creates its own network namespace
+# which breaks DNS resolution on container runners due to LXD networking limitations.
 # Issue: https://github.com/IBM/actionspz/issues/43
 name: mmdebstrap-test
 
@@ -7,7 +9,10 @@ on:
 
 jobs:
   mmdebstrap-test:
-    runs-on: ubuntu-24.04-s390x
+    strategy:
+      matrix:
+        runner: [ubuntu-24.04-s390x, ubuntu-24.04-s390x-vm]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
     steps:
