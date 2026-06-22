@@ -54,5 +54,5 @@ jobs:
         echo
 
         echo "### NETWORK (EXTERNAL) ###"
-        ping -c 3 google.ca
+        ping -c 3 google.ca || echo "ICMP blocked"
         curl -I https://api.github.com
