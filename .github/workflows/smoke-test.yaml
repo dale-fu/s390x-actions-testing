@@ -48,6 +48,10 @@ jobs:
         ls /lib/modules/ 2>/dev/null || echo "No /lib/modules"
         echo
 
+        echo "### KVM ###"
+        ls -la /dev/kvm 2>/dev/null && echo "KVM: available" || echo "KVM: not available"
+        echo
+
         echo "### DISK ###"
         df -h
         echo
