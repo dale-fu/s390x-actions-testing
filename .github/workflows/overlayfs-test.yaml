@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Disable AppArmor userns restriction (VM only)
         if: contains(matrix.runner, 'vm')
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
 
       - name: Run mkosi sandbox
         run: |
