@@ -23,6 +23,10 @@ jobs:
       - name: Build Kind from source
         run: |
           wget https://raw.githubusercontent.com/linux-on-ibm-z/scripts/master/Kind/0.31.0/build_kind.sh
+
+          # Debian bookworm dropped s390x in LTS (June 2026) — use last s390x tag
+          sed -i '/git apply/a sed -i "s/debian:bookworm-slim/debian:bookworm-20260713-slim/" images/base/Dockerfile' build_kind.sh
+
           bash build_kind.sh -y
 
       - name: Build cross image
@@ -35,7 +39,7 @@ jobs:
           curl -s $PATCH_URL/release.patch | git apply --ignore-whitespace -
           docker buildx inspect
           cd images/build/cross/
-          TARGETPLATFORM=s390x make container
+          TARGETPLATFORM=s390x BASEIMAGE=debian:bookworm-20260713-slim make container
 
       - name: Build node image
         env:
