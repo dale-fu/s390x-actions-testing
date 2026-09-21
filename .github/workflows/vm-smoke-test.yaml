@@ -13,6 +13,7 @@
 #   - Issue #49: KEDA — kind cluster needs privileged containers (separate kind-test.yaml)
 #   - Issue #63: opendatahub-io/notebooks — AppArmor blocks podman/buildah socket() by binary path
 #   - Issue #68: Docker rlimit + sysctl permission denied in LXC
+#   - Issue #71: rscrypto — unprivileged perf cycles:u (separate rscrypto-test.yaml)
 #   - Issue #78: ManageIQ — AppArmor blocks privileged Docker operations (mock command)
 #   - Issue #110: AlmaLinux OS — KVM/QEMU needed for Packer VM provisioning
 name: vm-smoke-test
