@@ -15,10 +15,13 @@ jobs:
         runner:
           - ubuntu-22.04
           - ubuntu-24.04
+          - ubuntu-26.04
           - ubuntu-22.04-arm
           - ubuntu-24.04-arm
+          - ubuntu-26.04-arm
           - ubuntu-22.04-s390x-vm
           - ubuntu-24.04-s390x-vm
+          - ubuntu-26.04-s390x-vm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
 
