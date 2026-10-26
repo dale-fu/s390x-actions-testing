@@ -1,0 +1,54 @@
+# This workflow checks that DNS works inside Docker containers on the runners.
+# Docker 29.4.2 vendored moby/profiles seccomp v0.2.2, which blocks
+# socketcall(2). glibc on s390x routes its socket wrappers through socketcall,
+# so every glibc container lost name resolution with "Temporary failure
+# resolving", while the runner itself resolved fine. Fixed in Docker 29.4.3
+# (seccomp v0.2.3). musl containers were unaffected, which is the signature of
+# this class of bug — if alpine passes and ubuntu fails, seccomp is blocking
+# socketcall again.
+# Issue: https://github.com/IBM/actionspz/issues/143
+# Upstream: https://github.com/actions/runner-images/issues/14790
+name: docker-dns-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-dns-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-22.04-s390x
+          - ubuntu-22.04-s390x-vm
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
+          - ubuntu-26.04-s390x
+          - ubuntu-26.04-s390x-vm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+
+    steps:
+      - name: Container DNS
+        run: |
+          echo "=== docker version ==="
+          docker version --format '{{.Server.Version}}'
+
+          echo "=== musl container ==="
+          docker run --rm alpine getent hosts ports.ubuntu.com \
+            && echo "musl DNS: OK" || echo "musl DNS: FAILED"
+
+          echo "=== glibc container ==="
+          docker run --rm ubuntu:22.04 getent hosts ports.ubuntu.com
+          echo "glibc DNS: OK"
+
+      - name: Docker build with apt-get update
+        run: |
+          echo "=== docker build ==="
+          work=$(mktemp -d)
+          cat > "$work/Dockerfile" <<'EOF'
+          FROM ubuntu:22.04
+          RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
+          EOF
+          docker build -t docker-dns-smoke "$work"
+          echo "docker build: OK"
