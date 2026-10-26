@@ -1,0 +1,51 @@
+# Rootless Podman/Buildah calls newuidmap to map the runner user's subordinate
+# IDs (typically 100000-165535). On ppc64le that write failed after the LXD to
+# Incus move because the container only had 65536 host IDs:
+#   newuidmap: write to uid_map failed: Operation not permitted
+# Containers should fail: their uid_map is "0 100000 65536", so internal IDs
+# stop at 65535 and the runner's subuid range starts past the end.
+# VMs have a full ID space and should pass.
+# Issue: https://github.com/IBM/actionspz/issues/143
+name: newuidmap-test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  newuidmap-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-22.04-s390x
+          - ubuntu-22.04-s390x-vm
+          - ubuntu-24.04-s390x
+          - ubuntu-24.04-s390x-vm
+          - ubuntu-26.04-s390x
+          - ubuntu-26.04-s390x-vm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+
+    steps:
+      - name: Rootless podman uid map
+        run: |
+          echo "=== identity ==="
+          id
+
+          echo "=== uid_map ==="
+          cat /proc/self/uid_map
+          echo "=== gid_map ==="
+          cat /proc/self/gid_map
+
+          echo "=== subuid ==="
+          cat /etc/subuid || true
+          echo "=== subgid ==="
+          cat /etc/subgid || true
+
+          echo "=== Install podman ==="
+          sudo apt-get update -qq
+          sudo apt-get install -y podman uidmap
+
+          echo "=== podman unshare ==="
+          podman unshare true
+          echo "podman unshare: OK"
