@@ -1,6 +1,7 @@
 # This workflow to test mmdebstrap in Docker with SYS_ADMIN capability.
 # When SYS_ADMIN is granted, mmdebstrap creates its own network namespace
 # which breaks DNS resolution on container runners due to LXD networking limitations.
+# Container runners are therefore expected to fail here; VM runners should pass.
 # Issue: https://github.com/IBM/actionspz/issues/43
 name: mmdebstrap-test
 
@@ -29,4 +30,3 @@ jobs:
             apt-get update && apt-get install -y iproute2 iputils-ping mmdebstrap &&
             mmdebstrap --mode=root --arch=s390x --variant=required noble /tmp/rootfs \
               --setup-hook="bash -c \"echo === ip a === >&2; ip a >&2; echo === resolv.conf === >&2; cat /etc/resolv.conf >&2; echo === apt test === >&2; apt-get update >&2\""'
-        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}

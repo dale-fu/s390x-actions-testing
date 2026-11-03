@@ -3,6 +3,9 @@
 # res = -1, errno = 38, strerror = Function not implemented
 # Expected Output:
 # res = -1, errno = 2, strerror = No such file or directory
+# Container runners are expected to fail here: seccomp blocks delete_module
+# so the syscall returns ENOSYS instead of reaching the kernel. VM runners
+# should pass.
 # Issue: https://github.com/IBM/actionspz/issues/3
 name: falcosecurity-test
 
@@ -50,4 +53,3 @@ jobs:
           EOF
           gcc test_delete_module.c -o test_delete_module
           sudo ./test_delete_module
-        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}

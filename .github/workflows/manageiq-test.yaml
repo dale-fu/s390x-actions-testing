@@ -1,6 +1,7 @@
 # This workflow to test mock command with regards to the issue
 # below where AppArmor is blocking specific operations.
-# This should pass if AppArmor is disabled or if using a VM.
+# Container runners are expected to fail here: AppArmor blocks the privileged
+# Docker operations mock needs. VM runners should pass.
 # Issue: https://github.com/IBM/actionspz/issues/78
 name: manageiq-test
 
@@ -35,4 +36,3 @@ jobs:
       - name: Test mock command
         run: |
           docker run --privileged --rm mock:latest mock -r fedora-43-s390x --init
-        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}
