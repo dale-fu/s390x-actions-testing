@@ -1,8 +1,17 @@
-# This workflow to test unprivileged userspace perf (cycles:u) for rscrypto.
+# This workflow tests unprivileged userspace perf (cycles:u) for rscrypto.
 # Same steps on container and VM: print paranoid, install perf, sudo sysctl
 # kernel.perf_event_paranoid=2, then perf stat -e cycles:u as the runner user.
 # Their capture job does not sysctl; they asked us to permit 2 or CAP_PERFMON.
-# Containers should fail the sysctl (host kernel). VMs should keep 2 and pass.
+#
+# KNOWN FAILURE on every runner. No s390x runner has a hardware PMU: the
+# IBM Cloud VSI does not expose the CPU-Measurement Counter Facility, so
+# /sys/bus/event_source/devices/ lists only software sources on the runner
+# hosts, in containers and inside VM guests alike. cycles:u therefore does
+# not exist anywhere. This is not fixable in the image or in Incus.
+#
+# perf only sets a non-zero exit code for this on newer versions: 6.8 prints
+# "<not supported>" and exits 0, 7.0 errors out. The counter value is checked
+# directly so both report the same result.
 # Issue: https://github.com/IBM/actionspz/issues/71
 name: rscrypto-test
 
@@ -38,11 +47,25 @@ jobs:
           fi
           perf version || perf --version
 
+          echo "=== Event sources ==="
+          ls /sys/bus/event_source/devices/
+
           echo "=== Set perf_event_paranoid=2 ==="
           sudo sysctl kernel.perf_event_paranoid=2
           cat /proc/sys/kernel/perf_event_paranoid
 
           echo "=== Unprivileged cycles:u ==="
-          perf stat --event cycles:u -- true
+          perf_output=$(perf stat --event cycles:u -- true 2>&1) || true
+          echo "${perf_output}"
+
+          if grep -q '<not supported>' <<<"${perf_output}"; then
+            echo "Userspace perf: FAILED (cycles:u counted nothing, no hardware PMU)"
+            exit 1
+          fi
+
+          if ! grep -qE '[0-9]+[0-9,]*[[:space:]]+cycles:u' <<<"${perf_output}"; then
+            echo "Userspace perf: FAILED (no cycles:u counter in output)"
+            exit 1
+          fi
+
           echo "Userspace perf: OK"
-        continue-on-error: ${{ !contains(matrix.runner, 'vm') }}
