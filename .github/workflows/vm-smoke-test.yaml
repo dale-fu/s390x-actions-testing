@@ -161,7 +161,6 @@ jobs:
       - name: Podman networking
         run: |
           if command -v podman &>/dev/null; then
-            sudo apt-get install -y slirp4netns 2>/dev/null || true
             podman run --rm docker.io/library/alpine:latest nslookup google.com && echo "Podman DNS: OK"
           else
             echo "Podman not installed, skipping"
