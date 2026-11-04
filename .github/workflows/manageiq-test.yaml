@@ -33,6 +33,9 @@ jobs:
             -t mock:latest \
             .
 
+      # The image runs as the unprivileged 'builder' user in the mock group: mock refuses to run
+      # as root, and refuses to be invoked directly as non-root. It has to go through the
+      # /usr/bin/mock consolehelper wrapper, which escalates via PAM.
       - name: Test mock command
         run: |
           docker run --privileged --rm mock:latest mock -r fedora-43-s390x --init

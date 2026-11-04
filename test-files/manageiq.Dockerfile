@@ -2,4 +2,6 @@ FROM registry.fedoraproject.org/fedora:43
 
 WORKDIR /work
 
-RUN dnf -y install git mock
+RUN dnf -y install git mock && useradd -G mock builder
+
+USER builder
