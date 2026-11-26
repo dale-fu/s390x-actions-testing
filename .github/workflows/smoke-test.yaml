@@ -11,7 +11,9 @@ jobs:
       matrix:
         runner:
           - ubuntu-24.04
+          - ubuntu-26.04
           - ubuntu-24.04-arm
+          - ubuntu-26.04-arm
           - ubuntu-22.04-s390x
           - ubuntu-22.04-s390x-vm
           - ubuntu-24.04-s390x
@@ -21,51 +23,77 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
 
-    steps:      
-    - name: Basic smoke test
-      run: |
-        set -e
+    steps:
+      - name: Basic smoke test
+        run: |
+          set -e
 
-        echo "### SYSTEM ###"
-        whoami
-        id
-        uname -a
-        cat /etc/os-release
-        lscpu
-        echo
+          echo "### SYSTEM ###"
+          whoami
+          id
+          uname -a
+          cat /etc/os-release
+          lscpu
+          echo
 
-        echo "### SECURITY ###"
-        apparmor_status || true
-        cat /proc/self/status | grep -i seccomp
-        cat /proc/self/status | grep -i cap
-        echo
+          echo "### SECURITY ###"
+          apparmor_status || true
+          cat /proc/self/status | grep -i seccomp
+          cat /proc/self/status | grep -i cap
+          echo
 
-        echo "### SUDO ###"
-        sudo -n true && echo "Passwordless sudo: OK" || echo "Passwordless sudo: FAILED"
-        cat /etc/sudoers.d/runner 2>/dev/null || echo "No /etc/sudoers.d/runner file"
-        echo
+          echo "### SUDO ###"
+          sudo -n true && echo "Passwordless sudo: OK" || echo "Passwordless sudo: FAILED"
+          cat /etc/sudoers.d/runner 2>/dev/null || echo "No /etc/sudoers.d/runner file"
+          echo
 
-        echo "### KERNEL MODULES ###"
-        ls /lib/modules/ 2>/dev/null || echo "No /lib/modules"
-        echo
+          echo "### KERNEL MODULES ###"
+          ls /lib/modules/ 2>/dev/null || echo "No /lib/modules"
+          echo
 
-        echo "### KVM ###"
-        ls -la /dev/kvm 2>/dev/null && echo "KVM: available" || echo "KVM: not available"
-        echo
+          echo "### KVM ###"
+          if [ -e /dev/kvm ]; then
+            ls -la /dev/kvm
+            if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+              echo "KVM: available (read/write OK)"
+            else
+              echo "KVM: present, but runner user lacks read/write access (groups: $(id -Gn))"
+            fi
+          else
+            echo "KVM: not available"
+          fi
+          echo
 
-        echo "### DISK ###"
-        df -h
-        echo
+          echo "### DISK & TMP ###"
+          df -hT
+          tmp_fstype=$(findmnt -n -o FSTYPE --target /tmp)
+          echo "/tmp filesystem type: ${tmp_fstype}"
+          if [ "${tmp_fstype}" = "tmpfs" ]; then
+            echo "ERROR: /tmp is mounted as RAM-backed tmpfs instead of root disk!"
+            exit 1
+          fi
+          echo
 
-        echo "### MEMORY ###"
-        free -h
-        echo
+          echo "### MEMORY, SWAP & CGROUPS ###"
+          free -h
+          swapon --show || true
+          echo "vm.swappiness: $(cat /proc/sys/vm/swappiness)"
+          mem_max=$(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo 'n/a')
+          swap_max=$(cat /sys/fs/cgroup/memory.swap.max 2>/dev/null || echo 'n/a')
+          echo "cgroup memory.max: ${mem_max}"
+          echo "cgroup memory.swap.max: ${swap_max}"
+          echo "lxcfs mount on /proc/meminfo: $(findmnt -n -o SOURCE /proc/meminfo 2>/dev/null || echo 'none (VM or lxcfs inactive)')"
+          if [ -z "${swap_max}" ] || [ "${swap_max}" = "0" ]; then
+            echo "ERROR: cgroup memory.swap.max is 0 or missing (swap disabled)!"
+            exit 1
+          fi
+          echo
 
-        echo "### NETWORK (INTERNAL) ###"
-        ip a
-        ip r
-        echo
+          echo "### NETWORK (INTERNAL) ###"
+          ip a
+          ip r
+          echo
 
-        echo "### NETWORK (EXTERNAL) ###"
-        ping -c 3 google.ca || echo "ICMP blocked"
-        curl -I https://api.github.com
+          echo "### NETWORK (EXTERNAL) ###"
+          ping -c 3 google.ca || echo "ICMP blocked"
+          curl -I https://api.github.com
